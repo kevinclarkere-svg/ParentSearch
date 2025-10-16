@@ -4,6 +4,11 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const BD_API_KEY = process.env.BD_API_KEY;
 
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  // Avoid creating client if required envs are missing — will throw at runtime if used.
+  console.error('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing in env');
+}
+
 const supabase = createClient(SUPABASE_URL || '', SUPABASE_KEY || '');
 
 module.exports = async (req, res) => {
@@ -18,12 +23,6 @@ module.exports = async (req, res) => {
     const { memberId, email, name } = req.body || {};
     if (!memberId) return res.status(400).json({ error: 'memberId required' });
 
-    if (!SUPABASE_URL || !SUPABASE_KEY) {
-      const msg = 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment variables';
-      console.error(msg, { SUPABASE_URL: !!SUPABASE_URL, SUPABASE_KEY: !!SUPABASE_KEY });
-      return res.status(500).json({ ok: false, error: msg });
-    }
-
     const hostname = `${memberId}.parentsearch.org`;
 
     const { data, error } = await supabase
@@ -37,13 +36,13 @@ module.exports = async (req, res) => {
       }, { onConflict: 'member_id' });
 
     if (error) {
-      console.error('Supabase error', error);
-      return res.status(500).json({ ok: false, error: error.message || error });
+      console.error('Supabase insert error', error);
+      return res.status(500).json({ ok: false, error: 'database error' });
     }
 
-    return res.json({ ok: true, memberId, hostname, row: data?.[0] || null });
+    return res.json({ ok: true, memberId, hostname });
   } catch (err) {
-    console.error('Webhook caught exception', err && err.stack ? err.stack : err);
-    return res.status(500).json({ ok: false, error: String(err && err.message ? err.message : err) });
+    console.error('Webhook error', err && err.stack ? err.stack : err);
+    return res.status(500).json({ ok: false, error: 'internal_error' });
   }
 };
