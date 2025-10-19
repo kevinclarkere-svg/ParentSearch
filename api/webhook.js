@@ -3,7 +3,7 @@ const { createClient } = require('@supabase/supabase-js');
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const BD_API_KEY = process.env.BD_API_KEY;
-const { ensureMemberFolder } = require('../util/createMemberFolder');
+const { ensureMemberFolder } = require('./createMemberFolder');
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   // Avoid creating client if required envs are missing — will throw at runtime if used.
